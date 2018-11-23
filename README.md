@@ -25,3 +25,20 @@ Here are some ideas:
 * the cylinder could pop at random locations on the table
 * one could pop random objects instead of just a cylinder
 * different types of camera systems could be used (DVS, stereo, ...)
+
+### Concrete approach of our group
+
+Ideen:
+
+- Spiking NN, 
+	-Evolutionärer Algo zur Bestimmung der Gewichte->Refractural Time: Wie schnell kann das Neuron feuern, nachdem es gerade gefeuert hat. (Prio 2)
+	-SuperSpike: Backpropagation für Spiking Neural Networks (Prio 1)
+	- Idee: 2stufiger Prozess: 1. Greifen, z.B. mit CNN, 2. Werfen durch RL oder Evolutionäre Strategie
+
+- RL (DeepQ) mit Optimierungsparameter: Plain Vanilla Feed Forward NN 
+
+
+Vorgehen für Idee1: 
+1. Bestehende Kamera verwenden --> CNN bekommt dies als Input und berechnet die Gelenkkoordinaten--> Idee: Input in ein RNN, das zeitlichen Ablauf berechnet --> Robotor bewegt sich im Besten Fall zum Object und greift dieses
+2. Verwenden eines Spiking NN als Gehirn des Roboters, welches nach dem Greifen die Winkelveränderungen für den besten Wurf berechnet.
+3. Der Roboter wift Object seeehr weit!!!
