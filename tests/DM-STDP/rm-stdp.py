@@ -13,15 +13,15 @@ inputNeuronFactor = 20
 outputNeuronFactor = 10
 env_name = 'MountainCar-v0'
 step_size = 10.0
-render = False
+render = True
 trials = 200
 
 ## Training params 
-Apos = 2
-Aneg = -2
-tauPos = 40
-tauNeg = 40
-tauTrace = 80
+Apos = 1
+Aneg = -0.5
+tauPos = 20
+tauNeg = 20
+tauTrace = 40
 
 learningRate = 1
 
@@ -121,7 +121,7 @@ params = {
 }
 
 inputPop = sim.Population(nObservations * inputNeuronFactor, sim.SpikeSourcePoisson())
-outputPop = sim.Population(nActions * outputNeuronFactor, sim.Izhikevich(**params))
+outputPop = sim.Population(nActions * outputNeuronFactor, sim.IF_curr_exp())
 syn = sim.StaticSynapse(weight=rnd('uniform', [0, 3]))
 connections = sim.Projection(inputPop, outputPop, sim.AllToAllConnector(), syn)
 
@@ -169,11 +169,10 @@ for i in range(trials):
         spikeTraceTracker.resetCount()
 
         action = 0 
-        if sum(actionCount) > 0:
-            p = np.array(actionCount) / sum(actionCount)
-            action = np.random.choice(nActions, p = p)
-        else:
+        if np.all(actionCount == np.max(actionCount)):
             action = np.random.choice(nActions)
+        else:
+            action = np.argmax(actionCount)
         
         ## take env step
         observation, reward, done, info = env.step(action)
@@ -185,7 +184,7 @@ for i in range(trials):
 
         lastSpeed = np.abs(observation[1]) 
         maxSpeed = np.max([lastSpeed, maxSpeed])
-        # print(f'Action Count: {actionCount}, Action #: {action}, Reward: {reward}, Speed: {lastSpeed}' )
+        print(f'Action Count: {actionCount}, Action #: {action}, Reward: {reward}, Speed: {lastSpeed}' )
 
         ## perform learning step
         weights += learningRate * reward * spikeTraceTracker.eTrace
@@ -195,7 +194,7 @@ for i in range(trials):
     ## Finished simulation
     print(f'Trial {i}, Total env reward = {totalReward}, Total adjusted reward: {totalAdjustedReward}, Max speed: {maxSpeed}' )
         
-# plot_spiketrains(inputPop, outputPop, 'results')
+plot_spiketrains(inputPop, outputPop, 'results')
 sim.end()
 print('Simulation ended')
 
