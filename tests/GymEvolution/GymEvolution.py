@@ -155,7 +155,7 @@ for i in range(trials):
                                         env.observation_space.low,
                                         env.observation_space.high,
                                         list(range(inputNeuronFactor))):
-            inputPop[index*inputNeuronFactor:(index+1)*inputNeuronFactor].set(rate=getRate(value, minV, maxV ))
+            inputPop[index*inputNeuronFactor:(index+1)*inputNeuronFactor].set(rate=<    te(value, minV, maxV ))
 
         # Rum network simulation
         sim.run(step_size, callbacks=[spikeTraceTracker])

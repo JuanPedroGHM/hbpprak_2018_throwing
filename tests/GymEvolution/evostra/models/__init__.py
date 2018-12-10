@@ -1,1 +1,3 @@
 from evostra.models.feed_forward_network import FeedForwardNetwork
+from evostra.models.spiking_feed_forward_network import Spiking_feed_forward_network
+
