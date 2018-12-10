@@ -1,19 +1,22 @@
 from __future__ import print_function
 import numpy as np
 import multiprocessing as mp
+from ..models.feed_forward_network import FeedForwardNetwork
+import gym
 
 np.random.seed(0)
 
 
 def worker_process(arg):
-    get_reward_func, weights = arg
-    return get_reward_func(weights)
+    get_reward_func, weights, env_name, topology = arg
+    return get_reward_func(weights, env_name, topology)
 
 
 class EvolutionStrategy(object):
-    def __init__(self, weights, get_reward_func, population_size=50, sigma=0.1, learning_rate=0.03, decay=0.999,
-                 num_threads=1):
+    def __init__(self, topology, weights, get_reward_func, population_size=50, sigma=0.1, learning_rate=0.03, decay=0.999,
+                 num_threads=1,env_name='CartPole-v1'):
 
+        self.topology = topology
         self.weights = weights
         self.get_reward = get_reward_func
         self.POPULATION_SIZE = population_size
@@ -21,6 +24,7 @@ class EvolutionStrategy(object):
         self.learning_rate = learning_rate
         self.decay = decay
         self.num_threads = mp.cpu_count() if num_threads == -1 else num_threads
+        self.env_name = env_name
 
     def _get_weights_try(self, w, p):
         weights_try = []
@@ -43,14 +47,14 @@ class EvolutionStrategy(object):
 
     def _get_rewards(self, pool, population):
         if pool is not None:
-            worker_args = ((self.get_reward, self._get_weights_try(self.weights, p)) for p in population)
+            worker_args = ((self.get_reward, self._get_weights_try(self.weights, p), self.env_name, self.topology) for p in population)
             rewards = pool.map(worker_process, worker_args)
 
         else:
             rewards = []
             for p in population:
                 weights_try = self._get_weights_try(self.weights, p)
-                rewards.append(self.get_reward(weights_try))
+                rewards.append(self.get_reward(weights_try, self.env_name, self.topology))
         rewards = np.array(rewards)
         return rewards
 
@@ -75,7 +79,7 @@ class EvolutionStrategy(object):
             self._update_weights(rewards, population)
 
             if (iteration + 1) % print_step == 0:
-                print('iter %d. reward: %f' % (iteration + 1, self.get_reward(self.weights)))
+                print('iter %d. reward: %f' % (iteration + 1, self.get_reward(self.weights, self.env_name, self.topology)))
         if pool is not None:
             pool.close()
             pool.join()

@@ -21,7 +21,7 @@ def load_model(name):
 def main():
     gym_env = 'MountainCar-v0'
     testenv = gym.make(gym_env)
-    model = load_model('MountainCar-v0-50-[2, 8, 6, 3].pickle')
+    model = load_model('MountainCar-v0-50-[2, 3].pickle')
     total_reward = []
 
     for i_episode in range(20):
@@ -32,7 +32,7 @@ def main():
             prediction = model.predict(observation)
             sm = np.exp(prediction) / np.sum(np.exp(prediction))
             decision = np.argmax(sm)
-            decision = testenv.action_space.sample()
+            #decision = testenv.action_space.sample()
             observation, reward, done, info = testenv.step(decision)
             rewards.append(reward)
             if done:
