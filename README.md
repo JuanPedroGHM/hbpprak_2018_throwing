@@ -58,3 +58,8 @@ Anwendung auf das richtige Problem
 2. Codierung der Inputs und Outputs in Spikes
 3. Topologien ausprobieren 
 ----------------------
+
+####Hacks und andere Hilfen
+----------------------------
+Possible Hack for Grasping: Merge Object together if enough Force is applied.
+Zylinder kann sonst explodieren. 
