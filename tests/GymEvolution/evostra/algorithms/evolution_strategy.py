@@ -1,7 +1,6 @@
 from __future__ import print_function
 import numpy as np
 import multiprocessing as mp
-from ..models.feed_forward_network import FeedForwardNetwork
 import gym
 
 np.random.seed(0)

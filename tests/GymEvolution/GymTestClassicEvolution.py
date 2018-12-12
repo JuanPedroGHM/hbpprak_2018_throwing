@@ -12,19 +12,20 @@ import matplotlib.pyplot as plt
 
 #global vars
 
-n_threads = 2
-pop_size = 50
+n_threads = 4
+pop_size = 30
 learning_rate = 0.03
 decay = 0.99
 sigma = 0.2
 environment = 'CartPole-v1'
+#environment = 'MountainCar-v0'
 
 hiddenLayers = [10,6]
-
+total_rewards = []
 
 def get_reward(weights,env_name,topology):
 
-    model = Spiking_feed_forward_network(topology)
+    model = FeedForwardNetwork(topology,max_fire_rate=1000)
     model.set_weights(weights)
 
     env = gym.make(env_name)
@@ -36,11 +37,12 @@ def get_reward(weights,env_name,topology):
 
     while (not done):
         prediction = model.predict(observation,high_obs,low_obs)
-        sm = np.exp(prediction) / np.sum(np.exp(prediction))
-        decision = np.argmax(sm)
+        #sm = np.exp(prediction) / np.sum(np.exp(prediction))
+        decision = np.argmax(prediction)
         observation, reward, done, info = env.step(decision)
         rewards.append(reward)
-    return np.sum(rewards)
+    total_rewards.append(np.sum(rewards))
+    return total_rewards[-1]
 
 def check_lr_dep_plausability(lr,dep,iterations):
     course = [lr*dep**iter for iter in range(iterations)]
@@ -55,20 +57,19 @@ def check_lr_dep_plausability(lr,dep,iterations):
         print("Decay may be too high")
 
 def test_model(model_name,model):
-
     testenv = gym.make(model_name)
-
-    testenv = gym.make(model_name)
+    high_obs = test_env.observation_space.high
+    low_obs = test_env.observation_space.low
     total_reward = []
-    for i_episode in range(20):
+    for i_episode in range(10):
         observation = testenv.reset()
         rewards = []
         for t in range(10000):
             testenv.render()
-            prediction = model.predict(observation)
+            prediction = model.predict(observation,high_obs,low_obs)
             sm = np.exp(prediction) / np.sum(np.exp(prediction))
             decision = np.argmax(sm)
-            decision = testenv.action_space.sample()
+            #decision = testenv.action_space.sample()
             observation, reward, done, info = testenv.step(decision)
             rewards.append(reward)
             if done:
@@ -90,18 +91,19 @@ if __name__ == '__main__':
     topology.extend(hiddenLayers)
     topology.append(n_actions)
 
-    iterations = 10*pop_size
+    iterations = 50
 
     check_lr_dep_plausability(learning_rate,decay,iterations)
 
     input("Continue?")
 
-    model = FeedForwardNetwork(topology)
+    model = FeedForwardNetwork(topology,max_fire_rate=500)
+
 
     es = EvolutionStrategy(topology, model.get_weights(), get_reward, population_size=pop_size, sigma=sigma, learning_rate=learning_rate,
                            decay=decay, num_threads=n_threads,env_name=environment)
 
-    es.run(iterations, print_step=10)
+    es.run(iterations, print_step=1)
 
     #save the optimal model
     optimized_weights = es.get_weights()
@@ -110,6 +112,9 @@ if __name__ == '__main__':
 
     with open(environment+"-"+str(pop_size)+"-"+str(topology)+".pickle","wb") as f:
         pickle.dump(model,f,pickle.HIGHEST_PROTOCOL)
+
+    plt.plot(total_rewards)
+    plt.show()
 
     input("Enter to go for test")
     test_model(environment,model)

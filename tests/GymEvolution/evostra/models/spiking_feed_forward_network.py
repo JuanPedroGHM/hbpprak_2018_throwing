@@ -8,21 +8,22 @@ except ImportError:
 
 
 class Spiking_feed_forward_network(object):
-    def __init__(self,topology,min_fire_rate=0,max_fire_rate=100):
+    def __init__(self,topology,min_fire_rate=0,max_fire_rate=100,simtime = 1000):
 
         self.topology = topology
         self.min_fire = min_fire_rate
         self.max_fire = max_fire_rate
+        self.simtime = simtime
         self.weights = []
 
         for index in range(len(topology)-1):
-            self.weights.append(np.zeros(shape=(topology[index], topology[index+1])))
+            self.weights.append(np.ones(shape=(topology[index], topology[index+1])))
 
     def predict(self, inp, max_obs, min_obs):
         def get_fire_rate():
             return (inp-min_obs)/(max_obs-min_obs)*(self.max_fire-self.min_fire) + self.min_fire
 
-        sim.setup()
+        sim.setup(timestep=0.1,min_delay=0.1,threads=4)
 
         inp_pop = sim.Population(self.topology[0],sim.SpikeSourcePoisson())
         inp_pop.record('spikes')
@@ -46,12 +47,12 @@ class Spiking_feed_forward_network(object):
         syn = sim.StaticSynapse(weight=self.weights[nof_hidden_layers],delay=0.5)
         connections = sim.Projection(hidden_layers[-1][0],out_pop,sim.AllToAllConnector(allow_self_connections=False),syn)
 
-        sim.run(500)
+        sim.run(self.simtime)
 
         inp_data = inp_pop.get_data()
         out_data = out_pop.get_data()
 
-        return [float(spiketrain.sum()) for spiketrain in out_data.segments[0].spiketrains]
+        return [len(spiketrain) for spiketrain in out_data.segments[0].spiketrains]
 
     def get_weights(self):
         return self.weights
