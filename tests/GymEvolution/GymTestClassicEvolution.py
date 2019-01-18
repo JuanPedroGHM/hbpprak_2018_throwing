@@ -15,10 +15,10 @@ import matplotlib.pyplot as plt
 n_threads = 4
 pop_size = 30
 learning_rate = 0.03
-decay = 0.99
+decay = 0.999
 sigma = 0.2
-environment = 'CartPole-v1'
-#environment = 'MountainCar-v0'
+#environment = 'CartPole-v1'
+environment = 'MountainCar-v0'
 
 hiddenLayers = [10,6]
 total_rewards = []
@@ -91,7 +91,7 @@ if __name__ == '__main__':
     topology.extend(hiddenLayers)
     topology.append(n_actions)
 
-    iterations = 50
+    iterations = 500
 
     check_lr_dep_plausability(learning_rate,decay,iterations)
 

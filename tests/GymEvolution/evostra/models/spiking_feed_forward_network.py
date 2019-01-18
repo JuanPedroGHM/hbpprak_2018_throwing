@@ -23,7 +23,7 @@ class Spiking_feed_forward_network(object):
         def get_fire_rate():
             return (inp-min_obs)/(max_obs-min_obs)*(self.max_fire-self.min_fire) + self.min_fire
 
-        sim.setup(timestep=0.1,min_delay=0.1,threads=4)
+        sim.setup(timestep=0.1,min_delay=0.1,threads=1)
 
         inp_pop = sim.Population(self.topology[0],sim.SpikeSourcePoisson())
         inp_pop.record('spikes')
