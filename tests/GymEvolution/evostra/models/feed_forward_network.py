@@ -7,12 +7,12 @@ except ImportError:
 
 
 class FeedForwardNetwork(object):
-    def __init__(self, layer_sizes):
+    def __init__(self, layer_sizes, *args,**kwargs):
         self.weights = []
         for index in range(len(layer_sizes)-1):
             self.weights.append(np.zeros(shape=(layer_sizes[index], layer_sizes[index+1])))
 
-    def predict(self, inp):
+    def predict(self, inp,*args):
         out = np.expand_dims(inp.flatten(), 0)
         for i, layer in enumerate(self.weights):
             out = np.dot(out, layer)
