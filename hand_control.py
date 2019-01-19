@@ -25,7 +25,7 @@ GRASPING_FACTORS = {
 @nrp.MapVariable("Ring_Proximal", initial_value=0.0)
 @nrp.MapVariable("Pinky_Proximal", initial_value=0.0)
 @nrp.MapVariable("Thumb_Flexion", initial_value=0.0)
-@nrp.MapVariable("Thumb_Opposition", initial_value=0.0)
+@nrp.MapVariable("Thumb_Opposition", initial_value=1.0)
 @nrp.MapRobotPublisher("topic_Index_Proximal", Topic('/robot/hand_Index_Finger_Proximal/cmd_pos', std_msgs.msg.Float64))
 @nrp.MapRobotPublisher("topic_Index_Medial", Topic('/robot/hand_Index_Finger_Distal/cmd_pos', std_msgs.msg.Float64))
 @nrp.MapRobotPublisher("topic_index_distal", Topic('/robot/hand_j14/cmd_pos', std_msgs.msg.Float64))
@@ -114,7 +114,8 @@ def hand_control(t, command, last_command_executed,
 
     # Thumb
     def flex_thumb(RANGE_MAX, FACTORS, grasp):
-        Thumb_Opposition.value = RANGE_MAX["Thumb_Opposition"] * FACTORS["Thumb_Opposition"] * grasp
+        #Thumb_Opposition.value = RANGE_MAX["Thumb_Opposition"] * FACTORS["Thumb_Opposition"] * grasp
+        Thumb_Opposition.value = 1.0
         topic_Thumb_Opposition.send_message(std_msgs.msg.Float64(Thumb_Opposition.value))
         Thumb_Flexion.value = RANGE_MAX["Thumb_Flexion"] * FACTORS["Thumb_Flexion"] * grasp
         topic_Thumb_Flexion.send_message(std_msgs.msg.Float64(Thumb_Flexion.value))
@@ -136,7 +137,7 @@ def hand_control(t, command, last_command_executed,
     def parse_grasping_command(cmd):
         do_grasp = None
         if cmd == "GRASP":
-            do_grasp = 1
+            do_grasp = 1.2
         elif cmd == "RELEASE":
             do_grasp = 0
         return do_grasp

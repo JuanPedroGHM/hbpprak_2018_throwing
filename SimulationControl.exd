@@ -50,7 +50,7 @@ class ResetSimulationState(State):
         return 'success'
     
 class TryingToGraspState(State):
-    def __init__(self, cylinder_name, rate=1., waitingTime=20, outcomes=['success', 'failure', 'aborted']):
+    def __init__(self, cylinder_name, rate=1., waitingTime=15, outcomes=['success', 'failure', 'aborted']):
         super(TryingToGraspState, self).__init__(outcomes=outcomes)
         self._rate = rospy.Rate(rate)
         self._waitingTime = waitingTime
@@ -67,6 +67,14 @@ class TryingToGraspState(State):
         armCmdTopic.publish(String('GRASP_BLUE'))
         rospy.Rate(0.5).sleep()
         handCmdTopic.publish(String('GRASP'))
+        rospy.Rate(0.5).sleep()
+        armCmdTopic.publish(String('GRASP_BLUE_0.8'))
+        rospy.Rate(0.5).sleep()
+        armCmdTopic.publish(String('GRASP_BLUE_0.6'))
+        rospy.Rate(0.5).sleep()
+        armCmdTopic.publish(String('GRASP_BLUE_0.4'))
+        rospy.Rate(0.5).sleep()
+        armCmdTopic.publish(String('GRASP_BLUE_0.2'))
         rospy.Rate(0.5).sleep()
         armCmdTopic.publish(String('RESET'))
         
@@ -142,6 +150,3 @@ with sm:
      FlyingCylinderState(cylinder_name),
      transitions = {"success": "reset_simulation",
                     "aborted": ERROR})
-    
-    
-

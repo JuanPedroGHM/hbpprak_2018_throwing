@@ -4,7 +4,7 @@ import numpy as np
 approach_red_conf = np.array([0.56958, -0.9, 1.1781, -0.0345, -0.6, 0.0])
 # GRASP
 grasp_red_conf = np.array([0.5178, -0.9, 1.1781, -0.0345, -0.6, 0.0])
-grasp_blue_conf = np.array([-0.5178, -0.9, 1.1781, -0.0345, -0.6, 0.0])
+grasp_blue_conf = np.array([-0.5378, -0.95, 1.1781, -0.0345, -0.6, 0.0])
 # DISPOSE
 dispose_red_conf = np.array([1.3980, -0.9, 1.1781, -0.0345, -0.6, 0.0])
 dispose_blue_conf = np.array([0.88026, -0.9, 1.1781, -0.0345, -0.9, 0.0])
@@ -25,7 +25,7 @@ reset_conf = np.zeros(6)
 @nrp.MapVariable("dispose_red_conf", initial_value=dispose_red_conf)
 @nrp.MapVariable("dispose_blue_conf", initial_value=dispose_blue_conf)
 @nrp.MapVariable("reset_conf", initial_value=reset_conf)
-@nrp.Neuron2Robot(triggers=['command'])
+@nrp.Neuron2Robot()
 def arm_control(t,
                 command, last_command_executed,
                 approach_red_conf,
@@ -65,9 +65,13 @@ def arm_control(t,
     split_command = command_str.split('_')
     action = split_command[0]
 
-    if len(split_command) > 1:
+    if len(split_command) == 2:
         color = split_command[-1]
         new_config = commands_confs[action][color]
+        
+    elif len(split_command) == 3:
+        color = split_command[1]
+        new_config = commands_confs[action][color] * float(split_command[-1])
     else:
         new_config = commands_confs[action]
     if new_config is not None:
