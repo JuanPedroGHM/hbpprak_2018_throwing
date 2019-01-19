@@ -13,15 +13,19 @@ FINISHED = 'FINISHED'
 ERROR = 'ERROR'
 PREEMPTED = 'PREEMPTED'
 
-armCmdTopic = rospy.Publisher('/arm_robot/arm_commands')
-handCmdTopic = rospy.Publisher('/arm_robot/hand_commands')
+armCmdTopic = rospy.Publisher('/arm_robot/arm_commands', String, queue_size=5)
+handCmdTopic = rospy.Publisher('/arm_robot/hand_commands', String, queue_size=5)
 
 sm = StateMachine(outcomes=[FINISHED, ERROR, PREEMPTED])
 
 cylinder_name = "cylinder"
-cylinder_path = "resources/cylinder.xml"
+cylinder_path = "/tmp/nrp-simulation-dir/resources/cylinder.xml"
 
 import hbp_nrp_excontrol.nrp_states as states
+
+import os 
+dir_path = os.path.dirname(os.path.realpath(__file__))
+clientLogger.info(dir_path)
 
 class ResetSimulationState(State):
     def __init__(self, cylinder_name, sdf_xml_path, outcomes=['success', 'aborted']):
@@ -42,6 +46,7 @@ class ResetSimulationState(State):
         clientLogger.info('Reseting Simulation')
         armCmdTopic.publish(String("RESET"))
         handCmdTopic.publish(String("RELEASE"))
+        rospy.Rate(0.5).sleep()
         return 'success'
     
 class TryingToGraspState(State):
@@ -60,8 +65,9 @@ class TryingToGraspState(State):
         clientLogger.info('Trying to grasp')
         start_time = rospy.Time.now()
         armCmdTopic.publish(String('GRASP_BLUE'))
+        rospy.Rate(0.5).sleep()
         handCmdTopic.publish(String('GRASP'))
-        
+        rospy.Rate(0.5).sleep()
         armCmdTopic.publish(String('RESET'))
         
         while not self.cylinderInPosition() and (rospy.Time.now() - start_time) < rospy.Duration(self._waitingTime):
@@ -122,23 +128,20 @@ with sm:
       "reset_simulation",
       ResetSimulationState(cylinder_name, cylinder_path),
       transitions = {"success": "trying_to_grasp",
-                     "aborted": ERROR}
-    )
+                     "aborted": ERROR})
     
     StateMachine.add(
      "trying_to_grasp",
      TryingToGraspState(cylinder_name),
      transitions = {"success": "flying_cylinder",
                     "failure": "reset_simulation",
-                    "aborted": ERROR}
-    )
+                    "aborted": ERROR})
     
     StateMachine.add(
      "flying_cylinder",
      FlyingCylinderState(cylinder_name),
      transitions = {"success": "reset_simulation",
-                    "aborted": ERROR}
-    )
+                    "aborted": ERROR})
     
     
 

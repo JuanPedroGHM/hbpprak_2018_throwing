@@ -1,4 +1,5 @@
-on='1.5'>
+<?xml version='1.0'?>
+<sdf version='1.5'>
   <model name='{cylinder_name}'>
     <pose frame="">-0.37797 -0.25321 1.12015 0 0 0</pose>
     <static>0</static>
