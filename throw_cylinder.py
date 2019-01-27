@@ -3,10 +3,9 @@
 import numpy as np
 
 #initial values 
-std_topology = [6,8,10,6]
-std_weights = []
-for index in range(len(std_topology)-1):
-    std_weights.append(np.zeros(shape=(std_topology[index], std_topology[index+1])))
+std_topology = None
+std_weights = None
+std_bias = None
 
 #Publish Topics
 @nrp.MapRobotPublisher("topic_arm_1_pub", Topic('/robot/arm_1_joint/cmd_pos', std_msgs.msg.Float64))
@@ -33,43 +32,66 @@ for index in range(len(std_topology)-1):
 
 
 #Global Varibales
-@nrp.MapVariable("topology", initial_value = std_topology )
-@nrp.MapVariable("weights", initial_value = std_weights)
+
+@nrp.MapVariable("weights", initial_value = std_weights, scope = nrp.GLOBAL)
+@nrp.MapVariable("topology", initial_value = std_topology, scope = nrp.GLOBAL)
+@nrp.MapVariable("bias", initial_value = std_topology, scope = nrp.GLOBAL)
+
 
 
 def throw_cylinder (t, arm_command, hand_command, 
                   topic_arm_1_pub, topic_arm_2_pub, topic_arm_3_pub, topic_arm_4_pub, topic_arm_5_pub, topic_arm_6_pub,
                   topic_arm_1_sub, topic_arm_2_sub, topic_arm_3_sub, topic_arm_4_sub, topic_arm_5_sub, topic_arm_6_sub,
-                  topology,weights, arm_command, last_command_executed):
+                  weights, topology, bias, arm_command, last_command_executed):
     
     pub_list = [topic_arm_1_pub, topic_arm_2_pub, topic_arm_3_pub, topic_arm_4_pub, topic_arm_5_pub, topic_arm_6_pub]
     sub_list = [topic_arm_1_sub, topic_arm_2_sub, topic_arm_3_sub, topic_arm_4_sub, topic_arm_5_sub, topic_arm_6_sub]
+
+    if topology is None:
+        return
+    if weights is None:
+        return
     
     
+    clientLogger.info("The topology is:" + str(topology.value))
     import imp
     mod = imp.load_source('FeedForwardNetwork', '/home/bbpnrsoa/.opt/nrpStorage/hbpprak_2018_throwing/feedforward_network.py')
     
     network = mod.FeedForwardNetwork(topology.value)
+    
+    #Create the weights array from weights.value
+    weight_arr = []
+    
+    #Use this method, if the experiment gets run by the virtual coach
+    #for key in weights.key():
+    #    weight_arr.append(weights[key])
+
+    #network.set_weights(np.array(weight_arr))
+    
     network.set_weights(weights.value)
+    network.set_bias(bias.value)
     
     #get input to use for network
     network_inp = []
     for source in sub_list:
+        
         elem = source.value
+        clientLogger.info(elem)
         if elem is not None:
-            network_inp.append(source.value)
+            network_inp.append(source.value.data)
         else:
-            return  
+            #return
+            network_inp.append(0)  
     
-    clientLogger.info("The current input to the network is: " + str(network_inp))
-    
+    clientLogger.info("The current input to the network is: {}".format(network_inp))
+    clientLogger.info(weights.value)
     #use input to calculate output
     
-    predictions = network.predict(network_inp)
-    clientLogger.info("The network's output is : " + str(prediction))
+    predictions = network.predict(np.array(network_inp))
+    clientLogger.info("The network's output is : " + str(predictions))
     
-    
-    
+    #send the output to the joints of the robot
+        
     for index, prediction in enumerate(predictions):
-        publist[index].send_message(std_msgs.msg.Float64(prediction))
-
+        pub_list[index].send_message(std_msgs.msg.Float64(prediction))
+    

@@ -10,4 +10,6 @@
   <transferFunction src="simple_move_robot.py" xsi:type="PythonTransferFunction" />
   <transferFunction src="throw_cylinder.py" xsi:type="PythonTransferFunction" />
   <transferFunction src="hand_control.py" xsi:type="PythonTransferFunction" />
+  <transferFunction src="set_weights.py" xsi:type="PythonTransferFunction" />
+  <transferFunction src="record_cylinder.py" xsi:type="PythonTransferFunction" />
 </bibi>
