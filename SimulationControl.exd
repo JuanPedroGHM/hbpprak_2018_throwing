@@ -40,13 +40,16 @@ class ResetSimulationState(State):
         self._cylinder_msg.initial_pose.position.y = -0.25321
         self._cylinder_msg.initial_pose.position.z = 1.12015
         self._cylinder_msg.reference_frame = "world"
+        self._delete_proxy = ServiceProxy('/gazebo/delete_model',
+                                          DeleteModel, persistent=True)
 
     def execute(self, userdata):
-        self._spawn_proxy(self._cylinder_msg)
-        clientLogger.info('Reseting Simulation')
-        armCmdTopic.publish(String("RESET"))
+        clientLogger.info('Resetting Simulation')
         handCmdTopic.publish(String("RELEASE"))
+        armCmdTopic.publish(String("RESET"))
         rospy.Rate(0.5).sleep()
+        self._delete_proxy(self._cylinder_name)
+        self._spawn_proxy(self._cylinder_msg)
         return 'success'
     
 class TryingToGraspState(State):
@@ -57,11 +60,9 @@ class TryingToGraspState(State):
         self._cylinder_name = cylinder_name
         self._state_proxy = ServiceProxy('/gazebo/get_model_state',
                                          GetModelState, persistent=True)
-        self._delete_proxy = ServiceProxy('/gazebo/delete_model',
-                                         DeleteModel, persistent=True)
         
     def execute(self, userdata):
-        ## Send grap commands and move the cylinder to reset position
+        ## Send grasp commands and move the cylinder to reset position
         clientLogger.info('Trying to grasp')
         start_time = rospy.Time.now()
         armCmdTopic.publish(String('GRASP_BLUE'))
@@ -76,7 +77,6 @@ class TryingToGraspState(State):
         rospy.Rate(0.5).sleep()
         armCmdTopic.publish(String('GRASP_BLUE_0.2'))
         rospy.Rate(0.5).sleep()
-        armCmdTopic.publish(String('RESET'))
         
         while not self.cylinderInPosition() and (rospy.Time.now() - start_time) < rospy.Duration(self._waitingTime):
             self._rate.sleep()
@@ -85,7 +85,7 @@ class TryingToGraspState(State):
             clientLogger.info('Cylinder in position, ready to take off!')
             return 'success'
         else:
-            self._delete_proxy(self._cylinder_name)
+            clientLogger.info('Grasping failed!')
             return 'failure'
         
     def cylinderInPosition(self):

@@ -2297,8 +2297,8 @@
            <gripper_link>COL_COL_COL_VIS_VIS_VIS_VIS_VIS_VIS_VIS_VIS_VIS_hollie_real_lef</gripper_link>
         </arm>
        <forces_angle_tolerance>100</forces_angle_tolerance>
-       <update_rate>4</update_rate>
-       <grip_count_threshold>4</grip_count_threshold>
+       <update_rate>8</update_rate> <!-- Set higher (max. 20) -> less hand wabbling, instead losing object sometimes while grasp -->
+       <grip_count_threshold>2</grip_count_threshold>
        <max_grip_count>8</max_grip_count>
        <release_tolerance>0.005</release_tolerance>
        <disable_collisions_on_attach>false</disable_collisions_on_attach>
