@@ -46,6 +46,7 @@ def throw_cylinder (t, arm_command, hand_command,
     
     pub_list = [topic_arm_1_pub, topic_arm_2_pub, topic_arm_3_pub, topic_arm_4_pub, topic_arm_5_pub, topic_arm_6_pub]
     sub_list = [topic_arm_1_sub, topic_arm_2_sub, topic_arm_3_sub, topic_arm_4_sub, topic_arm_5_sub, topic_arm_6_sub]
+    
 
     if topology is None:
         return
@@ -53,7 +54,7 @@ def throw_cylinder (t, arm_command, hand_command,
         return
     
     
-    clientLogger.info("The topology is:" + str(topology.value))
+    #clientLogger.info("The topology is:" + str(topology.value))
     import imp
     mod = imp.load_source('FeedForwardNetwork', '/home/bbpnrsoa/.opt/nrpStorage/hbpprak_2018_throwing/feedforward_network.py')
     
@@ -68,27 +69,36 @@ def throw_cylinder (t, arm_command, hand_command,
 
     #network.set_weights(np.array(weight_arr))
     
-    network.set_weights(weights.value)
-    network.set_bias(bias.value)
+    weight_inp = []
+    bias_inp = []
+    
+    layer_size = len(topology.value) - 1 
+
+    for i in range(1,layer_size+1):
+        weight_inp.append(np.array(weights.value['layer{}'.format(i)]))
+        bias_inp.append(np.array(bias.value['layer{}'.format(i)]))
+
+    network.set_weights(weight_inp)
+    network.set_bias(bias_inp)
     
     #get input to use for network
     network_inp = []
     for source in sub_list:
         
         elem = source.value
-        clientLogger.info(elem)
+        #clientLogger.info(elem)
         if elem is not None:
             network_inp.append(source.value.data)
         else:
             #return
-            network_inp.append(0)  
+            network_inp.append(0.0)  
     
-    clientLogger.info("The current input to the network is: {}".format(network_inp))
-    clientLogger.info(weights.value)
+    #clientLogger.info("The current input to the network is: {}".format(network_inp))
+    #clientLogger.info(weights.value)
     #use input to calculate output
     
     predictions = network.predict(np.array(network_inp))
-    clientLogger.info("The network's output is : " + str(predictions))
+    #clientLogger.info("The network's output is : " + str(predictions))
     
     #send the output to the joints of the robot
         

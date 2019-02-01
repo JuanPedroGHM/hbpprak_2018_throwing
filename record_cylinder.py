@@ -1,21 +1,21 @@
 import numpy as np
 import sensor_msgs.msg
 
-@nrp.MapCSVRecorder("ball_recorder", filename="ball_position.csv",
+@nrp.MapCSVRecorder("cylinder_recorder", filename="cylinder_position.csv",
                     headers=["Time", "px", "py", "pz"])
 @nrp.Robot2Neuron()
-def record_cylinder (t,ball_recorder):
+def record_cylinder (t,cylinder_recorder):
     from rospy import ServiceProxy
     from gazebo_msgs.srv import GetModelState
 
-    model_name = 'ball'
+    model_name = 'cylinder'
     state_proxy = ServiceProxy('/gazebo/get_model_state',
                                     GetModelState, persistent=False)
-    ball_state = state_proxy(model_name, "world")
+    cylinder = state_proxy(model_name, "world")
 
-    if ball_state.success:
-        current_position = ball_state.pose.position
-        ball_recorder.record_entry(t,
+    if cylinder.success:
+        current_position = cylinder.pose.position
+        cylinder_recorder.record_entry(t,
                                    current_position.x, 
                                    current_position.y, 
                                    current_position.z)
