@@ -2,6 +2,7 @@ import numpy as np
 from evolution_strategy import EvolutionStrategy
 import tempfile
 import os
+import csv
 
 try:
     from hbp_nrp_virtual_coach.virtual_coach import VirtualCoach
@@ -29,14 +30,17 @@ def save_position_csv(sim, datadir):
         cf.writerows(csv_data)
     
 def make_on_status(sim, datadir):
+    print("make_on_status laeuft")
     def on_status(msg):
+        print("on_status lauuft")
         print("Current simulation time: {}".format(msg['simulationTime']))
+        print(msg)
         if msg['simulationTime'] == 10.0 and sim.get_state() == 'started':
             sim.pause()  #solution
             save_position_csv(sim, datadir)
             sim.stop() #solution
             print("Trial terminated - saved CSV in {}".format(datadir))
-            
+        
     return on_status
         
 def run_experiment(datadir, weights, bias, topology):
@@ -54,6 +58,7 @@ def run_experiment(datadir, weights, bias, topology):
     buf = sim.get_transfer_function('throw_cylinder')
     sim.edit_transfer_function('throw_cylinder',buf) #solution
     sim.start()
+
     return sim
     
 
@@ -71,6 +76,8 @@ for index in range(len(topology)-1):
 
 tmp_folder = tempfile.mkdtemp()
 sim=run_experiment(tmp_folder, weights, bias, topology)
+while sim.get_state() == 'started':
+    pass
 #sim.stop()#
 csv_file = os.path.join(tmp_folder, csv_name)
 print(csv_file)
