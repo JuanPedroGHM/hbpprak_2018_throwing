@@ -3,3 +3,6 @@
 tests/DM-STDP/results
 results
 .idea
+*.swp
+*.pyc
+*.swo
