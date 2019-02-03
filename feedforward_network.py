@@ -19,7 +19,7 @@ class FeedForwardNetwork(object):
         out = np.expand_dims(inp.flatten(), 0)
         for weight, bias in zip(self.weights, self.bias):
             out = np.dot(out, weight) + bias
-            out = np.arctan(out)
+            out = np.tanh(out)
         return out[0]
 
     def get_weights(self):

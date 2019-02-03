@@ -55,17 +55,16 @@ class EvolutionStrategy(object):
     def _update_weights(self, rewards, population):
         std = rewards.std()
         if std == 0:
-            return
+            return 
         rewards = (rewards - rewards.mean()) / std
+        print("Updating weights")
         for index, w in enumerate(self.weights):
             layer_weight_population = np.array([p[0][index] for p in population])
             layer_bias_population = np.array([p[1][index] for p in population])
 
             update_factor = self.learning_rate / (self.POPULATION_SIZE * self.SIGMA)
-            
             self.weights[index] = w + update_factor * np.dot(layer_weight_population.T, rewards).T
             self.bias[index] = self.bias[index] + update_factor * np.dot(layer_bias_population.T, rewards).T
-        
         self.learning_rate *= self.decay
 
     def run(self, iterations, print_step=10):
@@ -84,4 +83,6 @@ class EvolutionStrategy(object):
         if pool is not None:
             pool.close()
 
+        print("AVG reward:" + str(average_reward))
         return average_reward
+

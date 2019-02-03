@@ -92,6 +92,7 @@ def throw_cylinder (t, arm_command, hand_command,
         else:
             #return
             network_inp.append(0.0)  
+            clientLogger.info("Zero appended")
     
     #clientLogger.info("The current input to the network is: {}".format(network_inp))
     #clientLogger.info(weights.value)

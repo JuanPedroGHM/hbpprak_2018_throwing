@@ -4,6 +4,7 @@ import tempfile
 import os
 import csv
 import time
+import pickle
 
 try:
     from hbp_nrp_virtual_coach.virtual_coach import VirtualCoach
@@ -77,7 +78,7 @@ def run_experiment(datadir, index, weights, bias, topology):
     return sim
     
 
-topology = [6,10,10,6]
+topology = [6,100,20,6]
 weights = []
 bias = []
 rewards = []
@@ -92,11 +93,11 @@ for index in range(len(topology)-1):
 
 csv_name = "cylinder_position.csv"
 n_threads = 1
-pop_size = 30
+pop_size = 2
 learning_rate = 0.03
 decay = 0.999
 sigma = 0.2
-iterations = 10
+iterations = 2
 
 path = '/home/bbpnrsoa/.opt/nrpStorage/hbpprak_2018_throwing/results'
 
@@ -106,9 +107,12 @@ es = EvolutionStrategy(topology, weights, bias, make_get_reward(path), pop_size,
 
 average_rewards = es.run(iterations, 1)
 
-import matplotlib.pyplot as plt
+final_weights = es.get_weights()
+final_bias = es.bias
 
-plt.plot(average_rewards)
-plt.show()
+optimal_params = {'weights':final_weights,'bias':final_bias}
+with open("optimal_params.pickle","wb") as f:
+    pickle.dump(optimal_params,f)
 
+np.savetxt("rewards.txt",np.array(average_rewards))
 
