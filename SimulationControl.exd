@@ -77,18 +77,28 @@ class TryingToGraspState(State):
         rospy.Rate(0.5).sleep()
         armCmdTopic.publish(String('GRASP_BLUE_0.2'))
         rospy.Rate(0.5).sleep()
+        armCmdTopic.publish(String("RESET"))
+        rospy.Rate(0.5).sleep()
         
-        while not self.cylinderInPosition() and (rospy.Time.now() - start_time) < rospy.Duration(self._waitingTime):
+        while not self.is_cylinder_in_position() and (rospy.Time.now() - start_time) < rospy.Duration(self._waitingTime):
             self._rate.sleep()
             
-        if self.cylinderInPosition():
+        if self.is_cylinder_in_position():
             clientLogger.info('Cylinder in position, ready to take off!')
             return 'success'
         else:
             clientLogger.info('Grasping failed!')
             return 'failure'
         
-    def cylinderInPosition(self):
+    def is_cylinder_in_position(self):
+        try:
+            cylinder_state = self._state_proxy(self._cylinder_name, "world")
+
+            if cylinder_state.pose.position.z > 2.0:
+                return True
+        except rospy.ServiceException as exc:
+            print("Service did not process request: " + str(exc))
+
         return False
 
 class FlyingCylinderState(State):
@@ -98,8 +108,6 @@ class FlyingCylinderState(State):
         self._cylinder_name = cylinder_name
         self._state_proxy = ServiceProxy('/gazebo/get_model_state',
                                          GetModelState, persistent=True)
-        self._delete_proxy = ServiceProxy('/gazebo/delete_model',
-                                         DeleteModel, persistent=True)
         self._distance_topic = rospy.Publisher('/cylinder_distance', Float32, queue_size=10)
         self.max_hit_duration=10
 
@@ -112,7 +120,6 @@ class FlyingCylinderState(State):
         cylinder_pos = self.get_cylinder_distance()
         clientLogger.advertise("Cylinder distance: {}".format(cylinder_pos))
         self._distance_topic.publish(Float32(cylinder_pos))
-        self._delete_proxy(self._cylinder_name)
         return 'success'
     
     def get_cylinder_distance(self):
