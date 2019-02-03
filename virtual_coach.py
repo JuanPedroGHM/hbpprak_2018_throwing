@@ -3,6 +3,7 @@ from evolution_strategy import EvolutionStrategy
 import tempfile
 import os
 import csv
+import time
 
 try:
     from hbp_nrp_virtual_coach.virtual_coach import VirtualCoach
@@ -20,30 +21,44 @@ def make_dict_from_weights(weights):
         wdic["layer"+str(index)]=layer.tolist()
         index = index + 1
     return wdic
-
-csv_name = 'cylinder_position.csv'
     
-def save_position_csv(sim, datadir):
-    with open(os.path.join(datadir, csv_name), 'wb') as f:
-        cf = csv.writer(f)
-        csv_data = sim.get_csv_data(csv_name) #solution
-        cf.writerows(csv_data)
-    
-def make_on_status(sim, datadir):
-    print("make_on_status laeuft")
+def make_on_status(sim, datadir, index):
     def on_status(msg):
-        print("on_status lauuft")
         print("Current simulation time: {}".format(msg['simulationTime']))
-        print(msg)
         if msg['simulationTime'] == 10.0 and sim.get_state() == 'started':
             sim.pause()  #solution
-            save_position_csv(sim, datadir)
+
+            with open(os.path.join(datadir, 'cylinder_position_{}.csv'.format(index)), 'wb') as f:
+                cf = csv.writer(f)
+                csv_data = sim.get_csv_data(csv_name) #solution
+                cf.writerows(csv_data)
+                
             sim.stop() #solution
             print("Trial terminated - saved CSV in {}".format(datadir))
         
     return on_status
+
+def make_get_reward(tmp_folder):
+    def get_reward(index, weight, bias, topology):
         
-def run_experiment(datadir, weights, bias, topology):
+        
+        sim=run_experiment(tmp_folder, index, weights, bias, topology)
+        while sim.get_state() != 'stopped':
+            pass
+        try:
+            filePath = os.path.join(tmp_folder, 'cylinder_position_{}.csv'.format(index))
+            data = np.genfromtxt(filePath, delimiter = ",")
+            end_point = data[-1][2]
+        except AttributeError:
+            print("Could not read reward from csv file {}".format(filePath))
+            return None
+        
+        time.sleep(10)    
+        return -end_point 
+    
+    return get_reward
+
+def run_experiment(datadir, index, weights, bias, topology):
     
     wdic = make_dict_from_weights(weights)
     wbias = make_dict_from_weights(bias)
@@ -52,7 +67,7 @@ def run_experiment(datadir, weights, bias, topology):
     
    
     sim = vc.launch_experiment('hbpprak_2018_throwing')
-    sim.register_status_callback(make_on_status(sim, datadir)) #solution
+    sim.register_status_callback(make_on_status(sim, datadir, index)) #solution
      
     sim.edit_transfer_function('set_weights',tf) #solution
     buf = sim.get_transfer_function('throw_cylinder')
@@ -65,6 +80,7 @@ def run_experiment(datadir, weights, bias, topology):
 topology = [6,10,10,6]
 weights = []
 bias = []
+rewards = []
 
 for index in range(len(topology)-1):
     weights.append(np.random.uniform(0,1,(topology[index], topology[index+1])))
@@ -72,12 +88,27 @@ for index in range(len(topology)-1):
 
 
 #Start the evolutionary strategy
+#Evo Params
+
+csv_name = "cylinder_position.csv"
+n_threads = 1
+pop_size = 30
+learning_rate = 0.03
+decay = 0.999
+sigma = 0.2
+iterations = 10
+
+path = '/home/bbpnrsoa/.opt/nrpStorage/hbpprak_2018_throwing/results'
+
+print("The temporary folder for this experiment is {}".format(path))
+
+es = EvolutionStrategy(topology, weights, bias, make_get_reward(path), pop_size, sigma, learning_rate, decay, n_threads)
+
+average_rewards = es.run(iterations, 1)
+
+import matplotlib.pyplot as plt
+
+plt.plot(average_rewards)
+plt.show()
 
 
-tmp_folder = tempfile.mkdtemp()
-sim=run_experiment(tmp_folder, weights, bias, topology)
-while sim.get_state() == 'started':
-    pass
-#sim.stop()#
-csv_file = os.path.join(tmp_folder, csv_name)
-print(csv_file)

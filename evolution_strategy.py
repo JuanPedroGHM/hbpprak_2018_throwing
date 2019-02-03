@@ -2,20 +2,13 @@ from __future__ import print_function
 import numpy as np
 import multiprocessing as mp
 
-np.random.seed(0)
-
-
-def worker_process(arg):
-    get_reward_func, weights, env_name, topology = arg
-    return get_reward_func(weights, env_name, topology)
-
-
 class EvolutionStrategy(object):
-    def __init__(self, topology, weights, get_reward_func, population_size=50, sigma=0.1, learning_rate=0.03, decay=0.999,
+    def __init__(self, topology, weights, bias, get_reward_func, population_size=50, sigma=0.1, learning_rate=0.03, decay=0.999,
                  num_threads=1):
 
         self.topology = topology
         self.weights = weights
+        self.bias = bias
         self.get_reward = get_reward_func
         self.POPULATION_SIZE = population_size
         self.SIGMA = sigma
@@ -37,9 +30,11 @@ class EvolutionStrategy(object):
         population = []
         for i in range(self.POPULATION_SIZE):
             x = []
+            ind_bias = []
             for w in self.weights:
                 x.append(np.random.randn(*w.shape))
-            population.append(x)
+                ind_bias.append(np.random.randn(1,w.shape[1]))
+            population.append((x,ind_bias))
         return population
 
     def _get_rewards(self, pool, population):
@@ -49,9 +44,11 @@ class EvolutionStrategy(object):
 
         else:
             rewards = []
-            for p in population:
-                weights_try = self._get_weights_try(self.weights, p)
-                rewards.append(self.get_reward(weights_try, self.env_name, self.topology))
+            for index, p in enumerate(population):
+                weights_try = self._get_weights_try(self.weights, p[0])
+                bias_try = self._get_weights_try(self.bias, p[1])
+                rewards.append(self.get_reward(index, weights_try, bias_try, self.topology))
+                print("Finished with inididual {}".format(index))
         rewards = np.array(rewards)
         return rewards
 
@@ -61,23 +58,30 @@ class EvolutionStrategy(object):
             return
         rewards = (rewards - rewards.mean()) / std
         for index, w in enumerate(self.weights):
-            layer_population = np.array([p[index] for p in population])
+            layer_weight_population = np.array([p[0][index] for p in population])
+            layer_bias_population = np.array([p[1][index] for p in population])
+
             update_factor = self.learning_rate / (self.POPULATION_SIZE * self.SIGMA)
-            self.weights[index] = w + update_factor * np.dot(layer_population.T, rewards).T
+            
+            self.weights[index] = w + update_factor * np.dot(layer_weight_population.T, rewards).T
+            self.bias[index] = self.bias[index] + update_factor * np.dot(layer_bias_population.T, rewards).T
+        
         self.learning_rate *= self.decay
 
     def run(self, iterations, print_step=10):
         pool = mp.Pool(self.num_threads) if self.num_threads > 1 else None
+        average_reward = []
         for iteration in range(iterations):
 
             population = self._get_population()
             rewards = self._get_rewards(pool, population)
 
             self._update_weights(rewards, population)
+            average_reward.append(rewards.mean())
 
             if (iteration + 1) % print_step == 0:
-                print('iter %d. reward: %f' % (iteration + 1, self.get_reward(self.weights, self.topology)))
+                print('iter %d. reward: %f' % (iteration + 1, rewards.mean()))
         if pool is not None:
             pool.close()
-            pool.join()
 
+        return average_reward
