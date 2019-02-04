@@ -43,7 +43,8 @@ def make_get_reward(sim, csv_name):
         csv_data = np.array(sim.get_csv_data(csv_name))
         sim.reset('full')
         time.sleep(5)
-        return -csv_data[-1][2] 
+        print(csv_data)
+        return -float(csv_data[-1][2]) 
 
     return get_reward
     
