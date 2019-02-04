@@ -48,9 +48,7 @@ def throw_cylinder (t, arm_command, hand_command,
     sub_list = [topic_arm_1_sub, topic_arm_2_sub, topic_arm_3_sub, topic_arm_4_sub, topic_arm_5_sub, topic_arm_6_sub]
     
 
-    if topology is None:
-        return
-    if weights is None:
+    if topology.value is None or weights.value is None:
         return
     
     
@@ -90,16 +88,14 @@ def throw_cylinder (t, arm_command, hand_command,
         if elem is not None:
             network_inp.append(source.value.data)
         else:
-            #return
-            network_inp.append(0.0)  
-            clientLogger.info("Zero appended")
+            return
     
-    #clientLogger.info("The current input to the network is: {}".format(network_inp))
+    clientLogger.info("The current input to the network is: {}".format(network_inp))
     #clientLogger.info(weights.value)
     #use input to calculate output
     
-    predictions = network.predict(np.array(network_inp))
-    #clientLogger.info("The network's output is : " + str(predictions))
+    predictions = network.predict(np.array(network_inp), clientLogger)
+    clientLogger.info("The network's output is : " + str(predictions))
     
     #send the output to the joints of the robot
         

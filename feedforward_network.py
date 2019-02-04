@@ -15,11 +15,12 @@ class FeedForwardNetwork(object):
             self.weights.append(np.random.uniform(-1,1,(layer_sizes[index], layer_sizes[index+1])))
             self.bias.append(np.random.uniform(-1,1, (1,layer_sizes[index+1])))
 
-    def predict(self, inp,*args):
-        out = np.expand_dims(inp.flatten(), 0)
+    def predict(self, inp, logger):
+        out = inp 
         for weight, bias in zip(self.weights, self.bias):
             out = np.dot(out, weight) + bias
             out = np.tanh(out)
+
         return out[0]
 
     def get_weights(self):

@@ -5,9 +5,9 @@
     <file>idle_brain.py</file>
   </brainModel>
   <bodyModel assetPath="arm_robot" customAsset="false">arm_robot_gripper.sdf</bodyModel>
+  <transferFunction src="set_weights.py" xsi:type="PythonTransferFunction" />
   <transferFunction src="arm_control.py" xsi:type="PythonTransferFunction" />
   <transferFunction src="throw_cylinder.py" xsi:type="PythonTransferFunction" />
   <transferFunction src="hand_control.py" xsi:type="PythonTransferFunction" />
-  <transferFunction src="set_weights.py" xsi:type="PythonTransferFunction" />
   <transferFunction src="record_cylinder.py" xsi:type="PythonTransferFunction" />
 </bibi>
