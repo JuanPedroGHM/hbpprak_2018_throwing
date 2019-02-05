@@ -47,7 +47,7 @@ def make_get_reward(sim, csv_name):
         csv_data = np.array(sim.get_csv_data(csv_name))
         sim.reset('full')
 	wait_condition(100, 'Waiting for full reset', lambda x: x['simulationTime'] == 0.0 and x['state'] == 'paused')
-        return -csv_data[-1][2] 
+        return -float(csv_data[-1][2]) 
 
     return get_reward
     
