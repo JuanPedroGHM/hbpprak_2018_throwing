@@ -13,17 +13,21 @@ def make_dict_from_weights(weights):
         wdic["layer"+str(index)]=layer.tolist()
         index = index + 1
     return wdic
+
+last_status = [None]
     
-def make_on_status(sim):
-    def on_status(msg):
-        print("Current simulation time: {}".format(msg['simulationTime']))
-        if msg['simulationTime'] == 10.0 and sim.get_state() == 'started':
+def on_status(msg):
+    last_status[0] = msg
 
-            sim.pause()
-            print(dir(sim))
 
-        
-    return on_status
+def wait_condition(timeout, description, condition):
+    start = time.time()
+    while time.time() < start + timeout:
+	time.sleep(0.25)
+	if condition(last_status[0]):
+	    return
+    raise TestCaseError(description)
+
 
 def make_get_reward(sim, csv_name):
 
@@ -36,13 +40,13 @@ def make_get_reward(sim, csv_name):
     
         sim.edit_transfer_function('set_weights',tf) 
         sim.start()
-
-        while sim.get_state() != 'paused':
-            time.sleep(0.5) 
+	
+	wait_condition(100, 'Running simulation for 10 seconds', lambda x: x['simulationTime'] > 10.0)
+	sim.pause()
             
         csv_data = np.array(sim.get_csv_data(csv_name))
         sim.reset('full')
-        time.sleep(5)
+	wait_condition(100, 'Waiting for full reset', lambda x: x['simulationTime'] == 0.0 and x['state'] == 'paused')
         return -csv_data[-1][2] 
 
     return get_reward
@@ -64,7 +68,7 @@ if __name__ == '__main__':
 
     sim = vc.launch_experiment('hbpprak_2018_throwing')
 
-    sim.register_status_callback(make_on_status(sim)) #solution
+    sim.register_status_callback(on_status) #solution
 
     # Network params and init
     
