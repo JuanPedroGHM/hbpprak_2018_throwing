@@ -47,7 +47,13 @@ def make_get_reward(sim, csv_name):
         csv_data = np.array(sim.get_csv_data(csv_name))
         sim.reset('full')
 	wait_condition(100, 'Waiting for full reset', lambda x: x['simulationTime'] == 0.0 and x['state'] == 'paused')
-        return -float(csv_data[-1][2]) 
+	cylinder_reward = -csv_data[1:,1].astype(np.float).min()
+	distance_reward = csv_data[1:,2].astype(np.float).min()
+
+	reward = (1 + cylinder_reward)**2 - distance_reward
+	print('FINISHED TEST WITH REWARD {}'.format(reward))
+
+        return reward
 
     return get_reward
     
@@ -66,7 +72,7 @@ if __name__ == '__main__':
               cle-virtual-coach jupyter notebook")
         raise e
 
-    sim = vc.launch_experiment('hbpprak_2018_throwing')
+    sim = vc.launch_experiment('template_manipulation_0')
 
     sim.register_status_callback(on_status) #solution
 
@@ -83,16 +89,22 @@ if __name__ == '__main__':
         bias.append(np.random.uniform(-1,1,(1,topology[index+1])))
 
 
+    with open('tmp_params.pickle', 'rb') as tmpFile:
+	savedObject = pickle.load(tmpFile)
+	weights = savedObject['weights']
+	bias = savedObject['bias']
+
     #Start the evolutionary strategy
+
     #Evo Params
 
     n_threads = 1
-    pop_size = 2
-    learning_rate = 0.03
+    pop_size = 50 
+    learning_rate = 0.01
     decay = 0.999
     sigma = 0.2
-    iterations = 2
-
+    iterations = 50 
+    
     es = EvolutionStrategy(topology, weights, bias, make_get_reward(sim, csv_name), pop_size, sigma, learning_rate, decay, n_threads)
 
     average_rewards = es.run(iterations, 1)
