@@ -17,7 +17,7 @@ reset_conf = np.zeros(6)
 @nrp.MapRobotPublisher("topic_arm_4", Topic('/robot/arm_4_joint/cmd_pos', std_msgs.msg.Float64))
 @nrp.MapRobotPublisher("topic_arm_5", Topic('/robot/arm_5_joint/cmd_pos', std_msgs.msg.Float64))
 @nrp.MapRobotPublisher("topic_arm_6", Topic('/robot/arm_6_joint/cmd_pos', std_msgs.msg.Float64))
-@nrp.MapRobotSubscriber('command', Topic('/arm_robot/arm_commands', std_msgs.msg.String))
+@nrp.MapRobotSubscriber('arm_command', Topic('/arm_robot/arm_commands', std_msgs.msg.String))
 @nrp.MapVariable("last_command_executed", initial_value=None)
 @nrp.MapVariable("approach_red_conf", initial_value=approach_red_conf)
 @nrp.MapVariable("grasp_red_conf", initial_value=grasp_red_conf)
@@ -27,7 +27,7 @@ reset_conf = np.zeros(6)
 @nrp.MapVariable("reset_conf", initial_value=reset_conf)
 @nrp.Neuron2Robot()
 def arm_control(t,
-                command, last_command_executed,
+                arm_command, last_command_executed,
                 approach_red_conf,
                 grasp_red_conf, grasp_blue_conf,
                 dispose_red_conf, dispose_blue_conf,
@@ -42,10 +42,10 @@ def arm_control(t,
 
     import collections
 
-    if command.value is None:
+    if arm_command.value is None:
         return
     else:
-        command_str = command.value.data
+        command_str = arm_command.value.data
 
     if command_str == last_command_executed.value:
         return
@@ -77,3 +77,4 @@ def arm_control(t,
     if new_config is not None:
         last_command_executed.value = command_str
         send_joint_config(topics_arm, new_config)
+
