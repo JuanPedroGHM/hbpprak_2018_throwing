@@ -78,7 +78,7 @@ if __name__ == '__main__':
 
     # Network params and init
     
-    topology = [6,100,20,6]
+    topology = [7,100,20,7]
 
     weights = []
     bias = []

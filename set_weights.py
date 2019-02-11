@@ -9,7 +9,7 @@ def set_weights (t, weights,topology, bias):
         
         clientLogger.info('Setting network')
         
-        top = [6,100,20,6]
+        top = [7,100,20,7]
         in_wieghts = {}
         in_bias = {}
         for index in range(1,len(top)):

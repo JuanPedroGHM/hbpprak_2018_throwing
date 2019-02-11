@@ -4,7 +4,7 @@ from smach.state import State
 
 from gazebo_msgs.srv import ApplyBodyWrench, GetModelState, DeleteModel, SpawnEntity, SpawnEntityRequest
 from geometry_msgs.msg import Wrench, Vector3, Point
-from std_msgs.msg import Float32, String
+from std_msgs.msg import Float32, String, Bool
 import rospy
 from rospy import ServiceProxy, wait_for_service
 from hbp_nrp_excontrol.logs import clientLogger
@@ -15,6 +15,7 @@ PREEMPTED = 'PREEMPTED'
 
 armCmdTopic = rospy.Publisher('/arm_robot/arm_commands', String, queue_size=5)
 handCmdTopic = rospy.Publisher('/arm_robot/hand_commands', String, queue_size=5)
+networkTopic = rospy.Publisher('/network/activate', Bool, queue_size=5)
 
 sm = StateMachine(outcomes=[FINISHED, ERROR, PREEMPTED])
 
@@ -45,15 +46,16 @@ class ResetSimulationState(State):
 
     def execute(self, userdata):
         clientLogger.info('Resetting Simulation')
+        self._delete_proxy(self._cylinder_name)
         handCmdTopic.publish(String("RELEASE"))
         armCmdTopic.publish(String("RESET"))
+        networkTopic.publish(Bool(False))
         rospy.Rate(0.5).sleep()
-        self._delete_proxy(self._cylinder_name)
         self._spawn_proxy(self._cylinder_msg)
         return 'success'
     
 class TryingToGraspState(State):
-    def __init__(self, cylinder_name, rate=1., waitingTime=15, outcomes=['success', 'failure', 'aborted']):
+    def __init__(self, cylinder_name, rate=1., waitingTime=10, outcomes=['success', 'failure', 'aborted']):
         super(TryingToGraspState, self).__init__(outcomes=outcomes)
         self._rate = rospy.Rate(rate)
         self._waitingTime = waitingTime
@@ -64,42 +66,16 @@ class TryingToGraspState(State):
     def execute(self, userdata):
         ## Send grasp commands and move the cylinder to reset position
         clientLogger.info('Trying to grasp')
-        start_time = rospy.Time.now()
         armCmdTopic.publish(String('GRASP_BLUE'))
         rospy.Rate(0.5).sleep()
         handCmdTopic.publish(String('GRASP'))
         rospy.Rate(0.5).sleep()
         armCmdTopic.publish(String('GRASP_BLUE_0.8'))
-        rospy.Rate(0.5).sleep()
-        armCmdTopic.publish(String('GRASP_BLUE_0.6'))
-        rospy.Rate(0.5).sleep()
-        armCmdTopic.publish(String('GRASP_BLUE_0.4'))
-        rospy.Rate(0.5).sleep()
-        armCmdTopic.publish(String('GRASP_BLUE_0.2'))
-        rospy.Rate(0.5).sleep()
-        armCmdTopic.publish(String("RESET"))
-        rospy.Rate(0.5).sleep()
-        
-        while not self.is_cylinder_in_position() and (rospy.Time.now() - start_time) < rospy.Duration(self._waitingTime):
-            self._rate.sleep()
-            
-        if self.is_cylinder_in_position():
-            clientLogger.info('Cylinder in position, ready to take off!')
-            return 'success'
-        else:
-            clientLogger.info('Grasping failed!')
-            return 'failure'
-        
-    def is_cylinder_in_position(self):
-        try:
-            cylinder_state = self._state_proxy(self._cylinder_name, "world")
+        rospy.Rate(1.0).sleep()
 
-            if cylinder_state.pose.position.z > 2.0:
-                return True
-        except rospy.ServiceException as exc:
-            print("Service did not process request: " + str(exc))
-
-        return False
+        networkTopic.publish(Bool(True))
+        
+        return 'success'
 
 class FlyingCylinderState(State):
     def __init__(self, cylinder_name, rate=1., outcomes=['success', 'aborted'], max_hit_duration=10):

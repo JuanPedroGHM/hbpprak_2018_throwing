@@ -9,11 +9,11 @@ RANGE_MAX = {
 }
 # grasping factors for the cylinder
 GRASPING_FACTORS = {
-    "Index": {"Index_Proximal": 0.3, "Index_Medial": 0.3},
-    "Middle": {"Middle_Proximal": 0.3, "Middle_Medial": 0.3},
-    "Ring": {"Ring_Proximal": 0.3},
-    "Pinky": {"Pinky_Proximal": 0.3},
-    "Thumb": {"Thumb_Opposition": 0.8, "Thumb_Flexion": 0.2}
+    "Index": {"Index_Proximal": 0.7, "Index_Medial": 0.7},
+    "Middle": {"Middle_Proximal": 0.7, "Middle_Medial": 0.7},
+    "Ring": {"Ring_Proximal": 0.7},
+    "Pinky": {"Pinky_Proximal": 0.7},
+    "Thumb": {"Thumb_Opposition": 0.8, "Thumb_Flexion": 0.5}
 }
 
 @nrp.MapVariable("RANGE_MAX", initial_value=RANGE_MAX)
@@ -136,10 +136,15 @@ def hand_control(t, command, last_command_executed,
 
     def parse_grasping_command(cmd):
         do_grasp = None
-        if cmd == "GRASP":
-            do_grasp = 1.2
-        elif cmd == "RELEASE":
-            do_grasp = 0
+        cmd = command_str.split('_')
+        if len(cmd) == 1:
+            if cmd[0] == "GRASP":
+                do_grasp = 1.2
+            elif cmd[0] == "RELEASE":
+                do_grasp = 0
+        elif len(cmd) == 2:
+            if cmd[0] == "GRASP":
+                do_grasp = cmd[1]
         return do_grasp
 
     grasp = parse_grasping_command(command_str)
