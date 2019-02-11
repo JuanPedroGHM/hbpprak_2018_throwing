@@ -57,4 +57,3 @@ def hand_control(t, command, last_command_executed,
         do_grasp(0.8)
     elif command_str == "RELEASE":
         do_grasp(0)
-
