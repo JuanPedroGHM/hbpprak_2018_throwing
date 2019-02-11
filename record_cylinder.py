@@ -13,7 +13,7 @@ def record_cylinder (t,cylinder_recorder):
     position_proxy = ServiceProxy('/gazebo/get_link_state', GetLinkState, persistent=False)
     cylinder = state_proxy(model_name, "world")
     
-    hand = position_proxy('robot::hand_f3_link', 'world')
+    hand = position_proxy('robot::hand_f2_link', 'world')
  
     if cylinder.success and hand.success:
         cylinder_position = np.array([cylinder.pose.position.x, cylinder.pose.position.y, cylinder.pose.position.z])

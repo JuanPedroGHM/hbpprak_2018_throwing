@@ -40,7 +40,7 @@ def throw_cylinder (t, arm_command, hand_command,
         return
     #clientLogger.info("The topology is:" + str(topology.value))
     import imp
-    mod = imp.load_source('FeedForwardNetwork', '/home/nrpuser/.opt/nrpStorage/template_manipulation_0/feedforward_network.py')
+    mod = imp.load_source('FeedForwardNetwork', '/home/bbpnrsoa/.opt/nrpStorage/hbpprak_2018_throwing/feedforward_network.py')
     network = mod.FeedForwardNetwork(topology.value)
     #Create the weights array from weights.value
     weight_arr = []
@@ -72,4 +72,4 @@ def throw_cylinder (t, arm_command, hand_command,
     clientLogger.info("The network's output is : " + str(predictions))
     #send the output to the joints of the robot
     for index, prediction in enumerate(predictions):
-        pub_list[index].send_message(std_msgs.msg.Float64(prediction * 1.2))
+        pub_list[index].send_message(std_msgs.msg.Float64(prediction*2.0))

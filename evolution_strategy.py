@@ -1,6 +1,7 @@
 from __future__ import print_function
 import numpy as np
 import multiprocessing as mp
+import pickle
 
 class EvolutionStrategy(object):
     def __init__(self, topology, weights, bias, get_reward_func, population_size=50, sigma=0.1, learning_rate=0.03, decay=0.999,
@@ -44,12 +45,24 @@ class EvolutionStrategy(object):
 
         else:
             rewards = []
+            best_reward = 0
+            best_index = -1
+            best_weights = -1
+            best_bias = -1
             for index, p in enumerate(population):
+                
                 weights_try = self._get_weights_try(self.weights, p[0])
                 bias_try = self._get_weights_try(self.bias, p[1])
                 rewards.append(self.get_reward(index, weights_try, bias_try, self.topology))
+                if(rewards[-1] > best_reward):
+                    best_reward = rewards[-1]
+                    best_index = index
+                    best_weights = weights_try
+                    best_bias = bias_try
                 print("Finished with inididual {}".format(index))
         rewards = np.array(rewards)
+        with open("weights/weights_reward_{}.pickle".format(best_reward),"wb") as f:
+            pickle.dump({'weights':best_weights,'bias':best_bias},f)
         return rewards
 
     def _update_weights(self, rewards, population):
@@ -77,6 +90,8 @@ class EvolutionStrategy(object):
 
             self._update_weights(rewards, population)
             average_reward.append(rewards.mean())
+            with open("tmp_weights.pickle","wb") as f:
+                pickle.dump({'weights':self.weights,'bias':self.bias},f)
 
             if (iteration + 1) % print_step == 0:
                 print('iter %d. reward: %f' % (iteration + 1, rewards.mean()))

@@ -6,6 +6,9 @@ import csv
 import time
 import pickle
 
+class TestCaseError(Exception):
+    pass
+
 def make_dict_from_weights(weights):
     index = 1
     wdic = {}
@@ -40,16 +43,21 @@ def make_get_reward(sim, csv_name):
     
         sim.edit_transfer_function('set_weights',tf) 
         sim.start()
-	
-	wait_condition(100, 'Running simulation for 10 seconds', lambda x: x['simulationTime'] > 10.0)
-	sim.pause()
+        
+
+        try:
+	    wait_condition(100, 'Running simulation for 10 seconds', lambda x: x['simulationTime'] > 10.0)
+        except TestCaseError:
+            pass
+        sim.pause()
             
         csv_data = np.array(sim.get_csv_data(csv_name))
         sim.reset('full')
 	wait_condition(100, 'Waiting for full reset', lambda x: x['simulationTime'] == 0.0 and x['state'] == 'paused')
+        
+        
 	cylinder_reward = -csv_data[1:,1].astype(np.float).min()
 	distance_reward = csv_data[1:,2].astype(np.float).min()
-
 	reward = (1 + cylinder_reward)**2 - distance_reward
 	print('FINISHED TEST WITH REWARD {}'.format(reward))
 
@@ -72,13 +80,13 @@ if __name__ == '__main__':
               cle-virtual-coach jupyter notebook")
         raise e
 
-    sim = vc.launch_experiment('template_manipulation_0')
+    sim = vc.launch_experiment('hbpprak_2018_throwing')
 
     sim.register_status_callback(on_status) #solution
 
     # Network params and init
     
-    topology = [6,100,20,6]
+    topology = [6,50,20,6]
 
     weights = []
     bias = []
@@ -89,21 +97,28 @@ if __name__ == '__main__':
         bias.append(np.random.uniform(-1,1,(1,topology[index+1])))
 
 
-    with open('tmp_params.pickle', 'rb') as tmpFile:
-	savedObject = pickle.load(tmpFile)
-	weights = savedObject['weights']
-	bias = savedObject['bias']
+    #with open('tmp_weights.pickle', 'rb') as tmpFile:
+    #	savedObject = pickle.load(tmpFile)
+    #   weights = savedObject['weights']
+    #	bias = savedObject['bias']
 
-    #Start the evolutionary strategy
+    with open('weights/weights_reward_24.2747422414.pickle','rb') as f:
+        s = pickle.load(f)
+        weights = s['weights']
+        bias = s['bias']
 
+   #Start the evolutionary strategy
+
+    print(weights)
     #Evo Params
 
     n_threads = 1
-    pop_size = 50 
+    pop_size = 25 
+    #pop_size = 10
     learning_rate = 0.01
-    decay = 0.999
-    sigma = 0.2
-    iterations = 50 
+    decay = 0.97
+    sigma = 0.00
+    iterations = 50
     
     es = EvolutionStrategy(topology, weights, bias, make_get_reward(sim, csv_name), pop_size, sigma, learning_rate, decay, n_threads)
 

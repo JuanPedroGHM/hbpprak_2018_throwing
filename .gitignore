@@ -7,3 +7,6 @@ results
 *.pyc
 *.swo
 results/
+weights/
+rewards/
+savedweights/
