@@ -4,7 +4,7 @@ from smach.state import State
 
 from gazebo_msgs.srv import ApplyBodyWrench, GetModelState, DeleteModel, SpawnEntity, SpawnEntityRequest
 from geometry_msgs.msg import Wrench, Vector3, Point
-from std_msgs.msg import Float32
+from std_msgs.msg import Float32, String
 import rospy
 from rospy import ServiceProxy, wait_for_service
 from hbp_nrp_excontrol.logs import clientLogger
@@ -12,6 +12,9 @@ from hbp_nrp_excontrol.logs import clientLogger
 FINISHED = 'FINISHED'
 ERROR = 'ERROR'
 PREEMPTED = 'PREEMPTED'
+
+armCmdTopic = rospy.Publisher('/arm_robot/arm_commands', String, queue_size=5)
+handCmdTopic = rospy.Publisher('/arm_robot/hand_commands', String, queue_size=5)
 
 sm = StateMachine(outcomes=[FINISHED, ERROR, PREEMPTED])
 
@@ -96,6 +99,7 @@ class NewCylinderState(State):
 
     def execute(self, userdata):
         self._spawn_proxy(self._cylinder_msg)
+        armCmdTopic.publish(String("RESET"))
         return 'success'
 
 class FlyingCylinderState(State):

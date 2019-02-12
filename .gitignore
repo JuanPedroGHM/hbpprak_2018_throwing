@@ -3,3 +3,10 @@
 tests/DM-STDP/results
 results
 .idea
+*.swp
+*.pyc
+*.swo
+results/
+weights/
+rewards/
+savedweights/
