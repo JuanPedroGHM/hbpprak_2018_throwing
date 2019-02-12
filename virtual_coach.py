@@ -6,6 +6,9 @@ import csv
 import time
 import pickle
 
+class TestCaseError(Exception):
+    pass
+
 def make_dict_from_weights(weights):
     index = 1
     wdic = {}
@@ -41,16 +44,25 @@ def make_get_reward(sim, csv_name):
         sim.edit_transfer_function('set_weights',tf) 
         sim.start()
 	
-	wait_condition(100, 'Running simulation for 10 seconds', lambda x: x['simulationTime'] > 10.0)
-	sim.pause()
+        try:
+            wait_condition(100, 'Running simulation for 10 seconds', lambda x: x['simulationTime'] > 18.0)
+        except TestCaseError as e:
+            print("TestcaseError trat auf")
+            print(str(e))
+        
+        sim.pause()
             
         csv_data = np.array(sim.get_csv_data(csv_name))
         sim.reset('full')
-	wait_condition(100, 'Waiting for full reset', lambda x: x['simulationTime'] == 0.0 and x['state'] == 'paused')
-	cylinder_reward = -csv_data[1:,1].astype(np.float).min()
-	distance_reward = csv_data[1:,2].astype(np.float).min()
+        try:
+            wait_condition(200, 'Waiting for full reset', lambda x: x['simulationTime'] == 0.0 and x['state'] == 'paused')
+        except TestCaseError as e:
+            print("Error after Reset")
+            print(e)
+        cylinder_reward = -csv_data[1:,1].astype(np.float).min()
+        penalty = csv_data[1:,1].astype(np.float).max()
 
-	reward = (1 + cylinder_reward)**2 - distance_reward
+	reward = cylinder_reward -(1+penalty)**2 
 	print('FINISHED TEST WITH REWARD {}'.format(reward))
 
         return reward
@@ -72,9 +84,9 @@ if __name__ == '__main__':
               cle-virtual-coach jupyter notebook")
         raise e
 
-    sim = vc.launch_experiment('template_manipulation_0')
+    sim = vc.launch_experiment('hbpprak_2018_throwing')
 
-    sim.register_status_callback(on_status) #solution
+    sim.register_status_callback(on_status) 
 
     # Network params and init
     
@@ -88,21 +100,22 @@ if __name__ == '__main__':
         weights.append(np.random.uniform(-1,1,(topology[index], topology[index+1])))
         bias.append(np.random.uniform(-1,1,(1,topology[index+1])))
 
-
-    with open('tmp_params.pickle', 'rb') as tmpFile:
-	savedObject = pickle.load(tmpFile)
-	weights = savedObject['weights']
-	bias = savedObject['bias']
+    #with open("tmp_weights_grasp.pickle","rb") as f:
+    with open("grasp_weights/weights_reward_13.3722463949.pickle","rb") as f:
+        a = pickle.load(f)
+        weights = a['weights']
+        bias = a['bias']
 
     #Start the evolutionary strategy
 
     #Evo Params
 
     n_threads = 1
-    pop_size = 50 
+    pop_size = 100 
     learning_rate = 0.01
     decay = 0.999
-    sigma = 0.2
+    #sigma = 0.1
+    sigma = 0.0
     iterations = 50 
     
     es = EvolutionStrategy(topology, weights, bias, make_get_reward(sim, csv_name), pop_size, sigma, learning_rate, decay, n_threads)
@@ -113,8 +126,8 @@ if __name__ == '__main__':
     final_bias = es.bias
 
     optimal_params = {'weights':final_weights,'bias':final_bias}
-    with open("optimal_params.pickle","wb") as f:
+    with open("optimal_params_grasp.pickle","wb") as f:
         pickle.dump(optimal_params,f)
 
-    np.savetxt("rewards.txt",np.array(average_rewards))
+    np.savetxt("rewards_grasp.txt",np.array(average_rewards))
 

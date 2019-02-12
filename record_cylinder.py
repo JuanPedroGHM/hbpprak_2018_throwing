@@ -3,7 +3,7 @@ import numpy as np
 import sensor_msgs.msg
 @nrp.MapCSVRecorder("cylinder_recorder", filename="cylinder_position.csv",
                     headers=["Time", "py", "dist"])
-@nrp.Robot2Neuron()
+@nrp.Robot2Neuron(throttling_rate=5)
 def record_cylinder (t,cylinder_recorder):
     from rospy import ServiceProxy
     from gazebo_msgs.srv import GetModelState, GetLinkState

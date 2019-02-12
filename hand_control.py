@@ -9,11 +9,11 @@ RANGE_MAX = {
 }
 # grasping factors for the cylinder
 GRASPING_FACTORS = {
-    "Index": {"Index_Proximal": 0.7, "Index_Medial": 0.7},
-    "Middle": {"Middle_Proximal": 0.7, "Middle_Medial": 0.7},
-    "Ring": {"Ring_Proximal": 0.7},
-    "Pinky": {"Pinky_Proximal": 0.7},
-    "Thumb": {"Thumb_Opposition": 0.8, "Thumb_Flexion": 0.5}
+    "Index": {"Index_Proximal": 0.3, "Index_Medial": 0.3},
+    "Middle": {"Middle_Proximal": 0.3, "Middle_Medial": 0.3},
+    "Ring": {"Ring_Proximal": 0.3},
+    "Pinky": {"Pinky_Proximal": 0.3},
+    "Thumb": {"Thumb_Opposition": 0.8, "Thumb_Flexion": 0.2}
 }
 
 @nrp.MapVariable("RANGE_MAX", initial_value=RANGE_MAX)
@@ -45,7 +45,7 @@ GRASPING_FACTORS = {
 @nrp.MapRobotPublisher("topic_palm", Topic('/robot/hand_j5/cmd_pos', std_msgs.msg.Float64))
 @nrp.MapRobotSubscriber('command', Topic('/arm_robot/hand_commands', std_msgs.msg.String))
 @nrp.MapVariable("last_command_executed", initial_value=None)
-@nrp.Neuron2Robot()
+@nrp.Neuron2Robot(throttling_rate=5)
 def hand_control(t, command, last_command_executed,
                     RANGE_MAX, GRASPING_FACTORS,
                     Index_Proximal, topic_Index_Proximal,
@@ -144,7 +144,7 @@ def hand_control(t, command, last_command_executed,
                 do_grasp = 0
         elif len(cmd) == 2:
             if cmd[0] == "GRASP":
-                do_grasp = cmd[1]
+                do_grasp = float(cmd[1])
         return do_grasp
 
     grasp = parse_grasping_command(command_str)

@@ -7,3 +7,5 @@ results
 *.pyc
 *.swo
 results/
+weights/
+

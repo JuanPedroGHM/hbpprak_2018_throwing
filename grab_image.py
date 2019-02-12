@@ -5,7 +5,7 @@ from cv_bridge import CvBridge
 import cv2
 @nrp.MapRobotSubscriber("camera", Topic("/camera/image_raw", sensor_msgs.msg.Image))
 @nrp.MapRobotPublisher('visualizer', Topic('/visualizer', sensor_msgs.msg.Image))
-@nrp.Robot2Neuron()
+@nrp.Robot2Neuron(throttling_rate=5)
 def grab_image(t, camera, visualizer):
     # Take the image from the robot's left eye
     image_msg = camera.value

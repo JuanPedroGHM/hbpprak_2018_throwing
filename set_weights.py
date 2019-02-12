@@ -3,6 +3,7 @@ import numpy as np
 @nrp.MapVariable("weights", initial_value = None, scope = nrp.GLOBAL)
 @nrp.MapVariable("topology", initial_value = None, scope = nrp.GLOBAL)
 @nrp.MapVariable("bias", initial_value = None, scope = nrp.GLOBAL)
+@nrp.Robot2Neuron(throttling_rate=5)
 
 def set_weights (t, weights,topology, bias):
     if weights.value is None and bias.value is None:
