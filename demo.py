@@ -41,7 +41,7 @@ if __name__ == '__main__':
 
     sim = vc.launch_experiment('hbpprak_2018_throwing')
 
-    topology = [6,100,20,6]
+    topology = [6,50,20,6]
 
     weights = []
     bias = []
@@ -62,5 +62,5 @@ if __name__ == '__main__':
     
     tf = 'import numpy as np\n@nrp.MapVariable("weights", initial_value = None, scope = nrp.GLOBAL)\n@nrp.MapVariable("topology", initial_value = None, scope = nrp.GLOBAL)\n@nrp.MapVariable("bias", initial_value = None, scope = nrp.GLOBAL)\ndef set_weights (t,weights,topology, bias):\n    top = [6,10,8,6]\n    in_wieghts = []\n    in_bias = []\n    weights.value = {}\n    topology.value = {}\n    bias.value = {}\n'.format(wdic, topology, wbias)
 
-    sim.add_transfer_function(tf)
+    sim.edit_transfer_function('set_weights',tf)
 
